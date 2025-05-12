@@ -1,5 +1,3 @@
-// Add Workflow Definitions here.
-export async function YOUR_WORKFLOW(name: string): Promise<string> {
-  // Your workflow code here
-  return `Hello, ${name}!`;
+export async function runGame(): Promise<string> {
+  return `Running a game... or am I?`;
 }
