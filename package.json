@@ -28,12 +28,14 @@
     "@temporalio/client": "^1.11.6",
     "@temporalio/worker": "^1.11.6",
     "@temporalio/workflow": "^1.11.6",
+    "debug": "^4.4.0",
     "express": "^5.1.0",
     "nanoid": "3.x"
   },
   "devDependencies": {
     "@temporalio/testing": "^1.11.6",
     "@tsconfig/node18": "^18.2.4",
+    "@types/debug": "^4.1.12",
     "@types/express": "^5.0.1",
     "@types/mocha": "8.x",
     "@types/node": "^22.9.1",
