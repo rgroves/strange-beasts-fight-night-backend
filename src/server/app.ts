@@ -1,25 +1,35 @@
-import { Connection, Client } from '@temporalio/client';
+import { Connection, Client, WithStartWorkflowOperation } from '@temporalio/client';
 import express, { Request, Response } from 'express';
-import { TASK_QUEUE_NAME } from '../shared';
-import { nanoid } from 'nanoid';
 import debug from 'debug';
 
-const dbglogger = debug('monster-battle-mania:server');
-let temporalClient: Client;
+import { addPlayerUpdate, getGameStateQuery, TASK_QUEUE_NAME } from '../shared';
+import { runGame } from '../workflows';
 
+const dbglogger = debug('giant-monster-brawl:server');
 const app = express();
 const port = 3000;
+
+let temporalClient: Client | undefined;
+let isShuttingDown = false;
 
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
 async function gracefulShutdown() {
+  if (isShuttingDown) {
+    return;
+  }
+
   dbglogger('Received shutdown signal, shutting down gracefully...');
+  isShuttingDown = true;
+
   if (temporalClient) {
     // Close the Temporal client connection
     await temporalClient.connection.close();
     dbglogger('Temporal client connection closed.');
   }
+
+  process.exit(0);
 }
 
 async function createClient() {
@@ -37,22 +47,68 @@ async function createClient() {
   });
 }
 
-app.get('/', async (req: Request, res: Response) => {
-  res.send('ready');
-  const handle = await temporalClient.workflow.start('runGame', {
-    taskQueue: TASK_QUEUE_NAME,
-    // type inference works! args: [name: string]
-    args: ['Temporal'],
-    // in practice, use a meaningful business ID, like customerId or transactionId
-    workflowId: 'workflow-' + nanoid(),
-  });
-  dbglogger(`Started workflow ${handle.workflowId}`);
+app.get('/', (req: Request, res: Response) => {
+  dbglogger('Received request to root endpoint');
+  res.send('Game Server Status: up and running');
+});
 
-  // optional: wait for client result
-  dbglogger(await handle.result());
+app.get('/start/:workflowId', async (req: Request, res: Response) => {
+  const { workflowId } = req.params;
+  const playerId = 'player 1';
+  dbglogger(`Received request to start game with workflow ID ${workflowId}`);
+
+  const startWorkflowOperation = new WithStartWorkflowOperation(runGame, {
+    workflowId,
+    args: [],
+    taskQueue: TASK_QUEUE_NAME,
+    workflowIdConflictPolicy: 'FAIL',
+  });
+
+  const recievedPlayerId = await temporalClient?.workflow.executeUpdateWithStart(addPlayerUpdate, {
+    startWorkflowOperation,
+    args: [{ requestedPlayerId: playerId }],
+  });
+
+  const handle = await startWorkflowOperation.workflowHandle();
+  dbglogger(`handle: ${JSON.stringify(handle)}`);
+
+  dbglogger(`Game Start Queued with workflow ID: ${workflowId}`);
+  res.json({ gameId: workflowId, playerId: recievedPlayerId });
+});
+
+app.get('/inspect/:gameId', async (req: Request, res: Response) => {
+  const { gameId } = req.params;
+  dbglogger(`Received request to inspect game ${gameId}`);
+
+  const handle = temporalClient?.workflow.getHandle(gameId);
+  const result = await handle?.query(getGameStateQuery, { gameId });
+
+  if (result) {
+    dbglogger(`Game state for ${gameId}: ${JSON.stringify(result)}`);
+    res.json(result);
+  } else {
+    dbglogger(`No game found with ID ${gameId}`);
+    res.status(404).json({ error: 'Game not found' });
+  }
+});
+
+app.get('/join/:gameId/:playerId', async (req: Request, res: Response) => {
+  const { gameId, playerId } = req.params;
+  dbglogger(`Received request to join game ${gameId} with player ID ${playerId}`);
+
+  const handle = temporalClient?.workflow.getHandle(gameId);
+  const recievedPlayerId = await handle?.executeUpdate(addPlayerUpdate, {
+    args: [{ requestedPlayerId: playerId }],
+  });
+
+  dbglogger(`Added player ID: ${recievedPlayerId}`);
+  res.json({ gameId, playerId: recievedPlayerId });
 });
 
 app.listen(port, async () => {
+  dbglogger('Connecting to Temporal server.');
   temporalClient = await createClient();
-  dbglogger(`Server listening on port ${port}`);
+  dbglogger('Connected to Temporal server.');
+
+  dbglogger(`Server is listening (port: ${port}).`);
 });
