@@ -30,8 +30,10 @@
     "@temporalio/worker": "^1.11.6",
     "@temporalio/workflow": "^1.11.6",
     "debug": "^4.4.0",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "nanoid": "3.x"
+    "nanoid": "3.x",
+    "openai": "^4.98.0"
   },
   "devDependencies": {
     "@temporalio/testing": "^1.11.6",
