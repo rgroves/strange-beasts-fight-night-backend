@@ -2,7 +2,7 @@ import { Connection, Client, WithStartWorkflowOperation } from '@temporalio/clie
 import express, { Request, Response } from 'express';
 import debug from 'debug';
 
-import { addPlayerUpdate, getGameStateQuery, TASK_QUEUE_NAME } from '../shared';
+import { addPlayerUpdate, getGameStateQuery, startMonsterImageGen, TASK_QUEUE_NAME } from '../shared';
 import { runGame } from '../workflows';
 
 const dbglogger = debug('giant-monster-brawl:server');
@@ -24,7 +24,6 @@ async function gracefulShutdown() {
   isShuttingDown = true;
 
   if (temporalClient) {
-    // Close the Temporal client connection
     await temporalClient.connection.close();
     dbglogger('Temporal client connection closed.');
   }
@@ -52,13 +51,16 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Game Server Status: up and running');
 });
 
-app.get('/start/:workflowId', async (req: Request, res: Response) => {
-  const { workflowId } = req.params;
+// TODO: NOTE - using GET for quick and easy testing from a browser purposes need to come back and refactor routes
+
+// TODO: This should be a POST request: POST /game/:gameId
+app.get('/start/:gameId', async (req: Request, res: Response) => {
+  const { gameId } = req.params;
   const playerId = 'player 1';
-  dbglogger(`Received request to start game with workflow ID ${workflowId}`);
+  dbglogger(`Received request to start game with workflow ID ${gameId}`);
 
   const startWorkflowOperation = new WithStartWorkflowOperation(runGame, {
-    workflowId,
+    workflowId: gameId,
     args: [],
     taskQueue: TASK_QUEUE_NAME,
     workflowIdConflictPolicy: 'FAIL',
@@ -72,10 +74,11 @@ app.get('/start/:workflowId', async (req: Request, res: Response) => {
   const handle = await startWorkflowOperation.workflowHandle();
   dbglogger(`handle: ${JSON.stringify(handle)}`);
 
-  dbglogger(`Game Start Queued with workflow ID: ${workflowId}`);
-  res.json({ gameId: workflowId, playerId: recievedPlayerId });
+  dbglogger(`Game Start Queued with workflow ID: ${gameId}`);
+  res.json({ gameId, playerId: recievedPlayerId });
 });
 
+// TODO: this should be a GET request to /game/:gameId
 app.get('/inspect/:gameId', async (req: Request, res: Response) => {
   const { gameId } = req.params;
   dbglogger(`Received request to inspect game ${gameId}`);
@@ -92,17 +95,43 @@ app.get('/inspect/:gameId', async (req: Request, res: Response) => {
   }
 });
 
+// TODO: This should be a POST request
 app.get('/join/:gameId/:playerId', async (req: Request, res: Response) => {
   const { gameId, playerId } = req.params;
   dbglogger(`Received request to join game ${gameId} with player ID ${playerId}`);
 
   const handle = temporalClient?.workflow.getHandle(gameId);
-  const recievedPlayerId = await handle?.executeUpdate(addPlayerUpdate, {
+  const addPlayerResponse = await handle?.executeUpdate(addPlayerUpdate, {
     args: [{ requestedPlayerId: playerId }],
   });
 
-  dbglogger(`Added player ID: ${recievedPlayerId}`);
-  res.json({ gameId, playerId: recievedPlayerId });
+  dbglogger(`Added player ID: ${addPlayerResponse?.playerId}`);
+  res.json({ gameId, playerId: addPlayerResponse });
+});
+
+// TODO: This should be a POST request: POST /game/:gameId/player/:playerId/doodle
+app.get('/doodle/:gameId/:playerId', async (req: Request, res: Response) => {
+  const { gameId, playerId } = req.params;
+  // const doodleFilePath = `/tmp/${gameId}-${playerId}-doodle.png`;
+  const doodleFilePath = `/tmp/test-doodle-${playerId.replace(' ', '-')}.png`;
+  // TODO Remove prompt stubs and get it from the POST payload
+  const prompt =
+    playerId === 'player 1'
+      ? 'Inspired by my doodle, generate a giant arachnid-like monster angled facing to the right. It is a tarantula from outer space. It shoots red-hot plasma from its eyes and the tail produces clouds of green noxious gas.'
+      : 'Inspired by my doodle, generate a giant arachnid-like monster angled facing to the left. It is a steampunk automoton version of a scorpion. It shoots glowing red "retro ray gun-styled" rays from its eyes and the tail emits sparks of green lightning.';
+  const style = 'retro sci-fi illustration';
+
+  dbglogger(`Received request to generate monster image for game ${gameId} for player ${playerId}`);
+
+  const handle = temporalClient?.workflow.getHandle(gameId);
+  await handle?.signal(startMonsterImageGen, {
+    playerId,
+    doodleFilePath,
+    prompt,
+    style,
+  });
+
+  res.json({ gameId, playerId });
 });
 
 app.listen(port, async () => {
