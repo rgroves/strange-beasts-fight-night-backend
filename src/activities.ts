@@ -38,7 +38,9 @@ export async function generateMonsterImage(input: generateMonsterImageInput): Pr
     image: doodleFile,
     prompt: `${prompt}. Render in a ${style} style.`,
     n: 1,
-    size: '1024x1536',
+    size: '1024x1024',
+    quality: 'low',
+    background: 'opaque',
   });
   log.info('OpenAI API response received.');
 
