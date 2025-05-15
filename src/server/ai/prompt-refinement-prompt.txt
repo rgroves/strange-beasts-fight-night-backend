@@ -1,0 +1,10 @@
+I'm writing a prompt to instruct an AI tool to help me with generating creative writing describing a  Giant Monster Battle.
+
+I'd like you to evaluate the prompt to give me advice on what is good about it, what is bad about it, and what should be improved.
+
+Important Instructions:
+- Read and keep in mind the best practices listed at this url: https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-api
+- Be critical over being helpful/agreeable
+- When analyzing revisions in the future do not provide new advice that conflicts with any previously given advice 
+
+Are you ready to receive the prompt?
