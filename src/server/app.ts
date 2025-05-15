@@ -119,7 +119,7 @@ app.get('/doodle/:gameId/:playerId', async (req: Request, res: Response) => {
     playerId === 'player 1'
       ? 'Inspired by my doodle, generate a giant arachnid-like monster angled facing to the right. It is a tarantula from outer space. It shoots red-hot plasma from its eyes and the tail produces clouds of green noxious gas.'
       : 'Inspired by my doodle, generate a giant arachnid-like monster angled facing to the left. It is a steampunk automoton version of a scorpion. It shoots glowing red "retro ray gun-styled" rays from its eyes and the tail emits sparks of green lightning.';
-  const style = 'retro sci-fi illustration';
+  const style = 'retro sci-fi pulp magazine illustration';
 
   dbglogger(`Received request to generate monster image for game ${gameId} for player ${playerId}`);
 
