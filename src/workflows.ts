@@ -33,12 +33,15 @@ export async function runGame(): Promise<string> {
 
   setHandler(addPlayerUpdate, (input: AddPlayerInput): AddPlayerOuptut => {
     const player: Player = { id: input.requestedPlayerId };
+
     if (gameState.players.some((p) => p.id === player.id)) {
       log.warn(`Player ${input.requestedPlayerId} is already in the game.`);
       throw new Error(`Player ${input.requestedPlayerId} is already in the game.`);
     }
+
     gameState.players.push(player);
     log.info(`Player ${input.requestedPlayerId} added to the game.`);
+
     return { playerId: input.requestedPlayerId };
   });
 
@@ -65,6 +68,7 @@ export async function runGame(): Promise<string> {
     log.info(`Generated monster image for player ${playerId} at: ${generatedImage.filePath}`);
 
     if (Object.keys(gameState.monsterImageMap).length === gameState.maxPlayers) {
+      setHandler(startMonsterImageGen, undefined);
       gameState.state = 'MonsterConfigPhase';
       log.info(`All players have monster images; transitioning to MonsterConfigPhase.`);
     }
@@ -98,6 +102,8 @@ export async function runGame(): Promise<string> {
   });
 
   await condition(() => gameState.players.length === gameState.maxPlayers);
+  log.info(`All players have joined the game. Starting the game...`);
+  setHandler(addPlayerUpdate, undefined);
 
   gameState.state = 'DrawingPhase';
   log.info(`Game is now in DrawingPhase with players: ${gameState.players.map((p) => p.id).join(', ')}`);
