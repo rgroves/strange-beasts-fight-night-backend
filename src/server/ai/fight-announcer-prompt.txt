@@ -21,7 +21,7 @@ root object
     attacks           array<object>   required
       attacker        string          required, must match a fighter name
       target          string          required, must match a fighter name
-      result          string          required, one of ["Miss","Glancing Blow","Direct Hit","Critical Hit"]
+      result          string          required, one of ["Defending", "Miss","Glancing Blow","Direct Hit","Critical Hit"]
     endOfTurnStatus   array<object>   required
       fighter         string          required, must match a fighter name
       vitality        string          required, one of ["Fresh","Worn","Wounded","Injured","Critical","Dead"]
