@@ -1,4 +1,4 @@
-import { condition, log, proxyActivities, setHandler } from '@temporalio/workflow';
+import { condition, log, proxyActivities, setHandler, workflowInfo } from '@temporalio/workflow';
 
 import type * as activities from './activities';
 import { addPlayerUpdate, getGameStateQuery, saveMonsterConfig, startMonsterImageGen } from './shared';
@@ -12,7 +12,7 @@ import {
   StartMonsterImageGenInput,
 } from './types';
 
-const { generateMonsterImage } = proxyActivities<typeof activities>({
+const { generateMockBattleData, generateMonsterImage } = proxyActivities<typeof activities>({
   startToCloseTimeout: '5 minutes',
   retry: {
     maximumAttempts: 3,
@@ -115,7 +115,13 @@ export async function runGame(): Promise<string> {
   // transition to BattleResolutionPhase.
 
   await condition(() => gameState.state === 'BattleResolutionPhase');
-  log.info(`Game is now in BattleResolutionPhase. Players are battling.`);
+  log.info('Game is now in BattleResolutionPhase.');
+  // TODO: For MVP, just generate a mock battle; future versions should allow more
+  // player control and strategy.
+  const gameId = workflowInfo().workflowId;
+  log.info(`Generatign ID: ${gameId}`);
+  const fightDetails = await generateMockBattleData({ gameId, monsterConfigMap: gameState.monsterConfigMap });
+  log.info(`Fight details: ${JSON.stringify(fightDetails)}`);
 
   gameState.state = 'GameOver';
   return `Game ended... but was it ever really started?`;

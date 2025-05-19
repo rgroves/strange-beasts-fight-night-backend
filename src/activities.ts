@@ -5,6 +5,8 @@ import fs from 'fs/promises';
 import OpenAI, { toFile } from 'openai';
 import os from 'os';
 import path from 'path';
+import generateMockBattle from './battle-logic';
+import { FilePath, GameId, MonsterConfig, PlayerId } from './types';
 
 config();
 
@@ -15,7 +17,7 @@ interface generateMonsterImageInput {
 }
 
 interface generateMonsterImageOutput {
-  filePath: string;
+  filePath: FilePath;
 }
 
 export async function generateMonsterImage(input: generateMonsterImageInput): Promise<generateMonsterImageOutput> {
@@ -60,4 +62,21 @@ export async function generateMonsterImage(input: generateMonsterImageInput): Pr
   log.info('Image saved successfully.');
 
   return { filePath };
+}
+
+interface generateBattleInput {
+  gameId: GameId;
+  monsterConfigMap: Record<PlayerId, MonsterConfig>;
+}
+
+interface generateMockBattleOutput {
+  filePath: string;
+}
+
+export async function generateMockBattleData({
+  gameId,
+  monsterConfigMap,
+}: generateBattleInput): Promise<generateMockBattleOutput> {
+  log.info(`Generating mock battle data for game ID: ${gameId}`);
+  return generateMockBattle(gameId, monsterConfigMap);
 }

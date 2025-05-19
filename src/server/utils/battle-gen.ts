@@ -15,6 +15,7 @@ Health (current health)
 Health Level: round(health / maxHealth) * 100
 Vitality (health level): Fresh (100-81), Worn (80-61), Wounded (60-41), Injured (40-21), Critical (20-1), Dead (0)
 */
+import fs from 'fs';
 
 import { MonsterConfig, Vitality } from '../../types';
 import generateMockBattle from '../../battle-logic';
@@ -163,7 +164,6 @@ const fighters: MonsterConfig[] = [
 ];
 
 function getRandomFighter(excludeName?: string): MonsterConfig {
-  // Get a random fighter from the fighters array, making sure it's not the excluded name
   if (fighters.length === 0) {
     throw new Error('No fighters available');
   }
@@ -177,7 +177,6 @@ function getRandomFighter(excludeName?: string): MonsterConfig {
   return fighter;
 }
 
-// Generate two random fighters
 const fighter1 = getRandomFighter();
 const fighter2 = getRandomFighter(fighter1.name);
 
@@ -186,6 +185,16 @@ const monsterConfigMap: Record<string, MonsterConfig> = {
   'player 2': fighter2,
 };
 
-const result = generateMockBattle(monsterConfigMap);
+const gameId = 'game-12345-mock-battle';
 
-console.log('Result:', result);
+generateMockBattle(gameId, monsterConfigMap)
+  .then(({ filePath }) => {
+    console.log('Result:', filePath);
+
+    console.log('Loading input from:', filePath);
+    const input = fs.readFileSync(filePath, 'utf-8');
+    console.log(input);
+  })
+  .catch((err) => {
+    console.error(err);
+  });

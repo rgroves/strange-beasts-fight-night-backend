@@ -1,4 +1,8 @@
-import { Attack, ActionResult, FightDetails, getVitalityIndex, MonsterConfig, Vitality } from './types';
+import fs from 'fs/promises';
+import os from 'os';
+import path from 'path';
+
+import { Attack, ActionResult, FightDetails, getVitalityIndex, MonsterConfig, Vitality, GameId } from './types';
 
 const LOGGING_ENABLED = false;
 const COMPACT_OUTPUT = true;
@@ -15,7 +19,7 @@ function log(...args: any[]) {
   }
 }
 
-export default function generateMockBattle(monsterConfigMap: Record<string, MonsterConfig>) {
+export default async function generateMockBattle(gameId: GameId, monsterConfigMap: Record<string, MonsterConfig>) {
   log(`Monster config map: ${stringify(monsterConfigMap)}`);
   log('\n\n========================');
   log('=== Fight Simulation ===');
@@ -225,12 +229,13 @@ export default function generateMockBattle(monsterConfigMap: Record<string, Mons
   );
 
   const results = `<FIGHT_DETAILS>${format_results(fightData)}</FIGHT_DETAILS>`;
+  const filePath = await saveFightDetails(gameId, results);
 
   log(`\n***\n ===> Fight Outcome: ${fightData.outcome}`);
   log(`\n***\nFight data after battle:`);
   log(`\n${results}\n`);
 
-  return results;
+  return { filePath };
 }
 
 function getFighterOrder(round: number, fighters: MonsterConfig[]) {
@@ -264,4 +269,12 @@ function determineVitality(health: number, maxHealth: number) {
   } else {
     return Vitality.Dead;
   }
+}
+
+async function saveFightDetails(gameId: GameId, fightDetails: string) {
+  const tmpDir = os.tmpdir();
+  const fileName = `${gameId}-fight-details.txt`;
+  const filePath = path.join(tmpDir, fileName);
+  await fs.writeFile(filePath, fightDetails);
+  return filePath;
 }
