@@ -1,3 +1,56 @@
+/**
+ * Utility function to convert value of enum T to the string value of its
+ * corresponding key string with type keyof typeof T ensuring type safety.
+ * @param enumType
+ * @param enumValue
+ * @returns A string representation of the enum value.
+ * @throws RangeError if the enum value is not valid.
+ * @template T - The enum type.
+ * @template TS - The string type of the enum.
+ * @example
+ * enum MyEnum {
+ *    A,
+ *    B
+ * }
+ * type MyEnumString = keyof typeof MyEnum;
+ *
+ * const myEnumValue = enumToString<typeof MyEnum, MyEnumString>(MyEnum, 1); // "B}
+ */
+const enumToString = <T, TS>(enumType: T, enumValue: number): TS => {
+  if (!Object.values(enumType as object).includes(enumValue)) {
+    throw RangeError(`Invalid enum value: ${enumValue}`);
+  }
+  return enumType[enumValue as keyof T] as TS;
+};
+
+/**
+ * Utility function to convert value of enum T to the index of its corresponding
+ * key string with type keyof typeof T ensuring type safety.
+ * @param enumType
+ * @param enumValue
+ * @returns The corresponding index of the enum value.
+ * @throws RangeError if the enum value is not valid.
+ * @template TT - The enum type.
+ * @template T - The enum value type.
+ * @example
+ * enum MyEnum {
+ *   A,
+ *   B,
+ * }
+ *
+ * const myEnumValue = enumToIndex<typeof MyEnum, MyEnum>(MyEnum, MyEnum.A); // 0
+ * const myEnumValue2 = enumToIndex<typeof MyEnum, MyEnum>(MyEnum, MyEnum.B); // 1
+ */
+const enumToIndex = <TT, T>(enumType: TT, enumValue: T) => {
+  const index = Object.values(enumType as object).indexOf(enumValue);
+  if (index === -1) {
+    throw RangeError(`Invalid enum value: ${enumValue}`);
+  }
+  return index;
+};
+
+export const getVitalityIndex = (vitality: Vitality) => enumToIndex<typeof Vitality, Vitality>(Vitality, vitality);
+
 // =====================================
 // === Game Related Types/Interfaces ===
 // =====================================
@@ -41,6 +94,38 @@ export enum Vitality {
   Wounded = 'Wounded',
   Critical = 'Critical',
   Dead = 'Dead',
+}
+
+export enum ActionResult {
+  Defending = 'Defending',
+  Miss = 'Miss',
+  GlancingBlow = 'Glancing Blow',
+  DirectHit = 'Direct Hit',
+  CriticalHit = 'Critical Hit',
+}
+
+export interface Attack {
+  attacker: string;
+  target: string;
+  attackType: string | null;
+  damage: number;
+  result: ActionResult;
+}
+
+export interface FighterStatus {
+  fighter: string;
+  vitality: Vitality;
+}
+
+export interface Turn {
+  attacks: Attack[];
+  endOfTurnStatus: FighterStatus[];
+}
+
+export interface FightDetails {
+  fighters: MonsterConfig[];
+  turns: Turn[];
+  outcome: string;
 }
 
 // ======================================
