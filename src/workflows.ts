@@ -12,7 +12,9 @@ import {
   StartMonsterImageGenInput,
 } from './types';
 
-const { generateBattleCommentary, generateMockBattleData, generateMonsterImage } = proxyActivities<typeof activities>({
+const { generateBattleAudio, generateBattleCommentary, generateMockBattleData, generateMonsterImage } = proxyActivities<
+  typeof activities
+>({
   startToCloseTimeout: '5 minutes',
   retry: {
     maximumAttempts: 3,
@@ -29,6 +31,7 @@ export async function runGame(): Promise<string> {
     players: [],
     monsterImageMap: {},
     monsterConfigMap: {},
+    audioFilePath: '',
   };
 
   setHandler(addPlayerUpdate, (input: AddPlayerInput): AddPlayerOuptut => {
@@ -125,6 +128,7 @@ export async function runGame(): Promise<string> {
     gameId,
     monsterConfigMap: gameState.monsterConfigMap,
   });
+
   log.info(`Fight details file: ${JSON.stringify(fightDetailsFilePath)}`);
 
   gameState.state = 'BattleCommentaryPhase';
@@ -137,6 +141,18 @@ export async function runGame(): Promise<string> {
 
   log.info(`Battle commentary file: ${JSON.stringify(battleCommentaryfilePath)}`);
 
+  gameState.state = 'AudioGenerationPhase';
+  log.info(`Game is now in AudioGenerationPhase. Generating battle audio...`);
+
+  const { battleAudioFilePath } = await generateBattleAudio({
+    gameId,
+    battleCommentaryfilePath,
+  });
+
+  gameState.audioFilePath = battleAudioFilePath;
+  log.info(`Battle audio file: ${JSON.stringify(battleAudioFilePath)}`);
+
   gameState.state = 'GameOver';
-  return `Game ended... but was it ever really started?`;
+
+  return `Game Over`;
 }

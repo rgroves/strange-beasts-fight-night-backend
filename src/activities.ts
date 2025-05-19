@@ -151,7 +151,7 @@ export async function generateBattleCommentary({
       },
     },
     reasoning: {
-      effort: 'low',
+      effort: 'medium',
       summary: 'auto',
     },
     tools: [],
@@ -169,5 +169,52 @@ export async function generateBattleCommentary({
 
   return {
     battleCommentaryfilePath,
+  };
+}
+
+interface generateBattleAudioInput {
+  gameId: string;
+  battleCommentaryfilePath: FilePath;
+}
+
+interface generateBattleAudioOutput {
+  battleAudioFilePath: FilePath;
+}
+
+export async function generateBattleAudio({
+  gameId,
+  battleCommentaryfilePath,
+}: generateBattleAudioInput): Promise<generateBattleAudioOutput> {
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    organization: process.env.OPENAI_ORG_ID,
+  });
+
+  const instructionsFilePath = path.resolve(__dirname, './server/ai', 'tts-announcer-instructions.txt');
+  console.log('Loading instructions from:', instructionsFilePath);
+  const asyncInstructions = fs.readFile(instructionsFilePath, 'utf-8');
+
+  console.log('Loading input from:', battleCommentaryfilePath);
+  const asyncInput = fs.readFile(battleCommentaryfilePath, 'utf-8');
+
+  const [instructions, input] = await Promise.all([asyncInstructions, asyncInput]);
+
+  const battleAudiofilePath = path.resolve(`./${gameId}-speech.mp3`);
+  console.log('Saving audio to:', battleAudiofilePath);
+
+  const mp3 = await openai.audio.speech.create({
+    model: 'gpt-4o-mini-tts',
+    voice: 'ballad',
+    instructions,
+    input,
+    response_format: 'mp3',
+    speed: 4.0,
+  });
+
+  const buffer = Buffer.from(await mp3.arrayBuffer());
+  await fs.writeFile(battleAudiofilePath, buffer);
+
+  return {
+    battleAudioFilePath: battleAudiofilePath,
   };
 }

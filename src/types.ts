@@ -71,11 +71,13 @@ export type GameState = {
     | 'MonsterConfigPhase'
     | 'BattleResolutionPhase'
     | 'BattleCommentaryPhase'
+    | 'AudioGenerationPhase'
     | 'GameOver';
   maxPlayers: number;
   players: Player[];
   monsterImageMap: Record<PlayerId, FilePath>;
   monsterConfigMap: Record<PlayerId, MonsterConfig>;
+  audioFilePath: FilePath;
 };
 
 export interface MonsterConfig {
