@@ -1,13 +1,14 @@
 import { condition, log, proxyActivities, setHandler } from '@temporalio/workflow';
 
 import type * as activities from './activities';
-import { addPlayerUpdate, getGameStateQuery, startMonsterImageGen } from './shared';
+import { addPlayerUpdate, getGameStateQuery, saveMonsterConfig, startMonsterImageGen } from './shared';
 import {
   AddPlayerInput,
   AddPlayerOuptut,
   GameState,
   GetGameStateInput,
   Player,
+  SaveMonsterConfigInput,
   StartMonsterImageGenInput,
 } from './types';
 
@@ -27,6 +28,7 @@ export async function runGame(): Promise<string> {
     maxPlayers: 2,
     players: [],
     monsterImageMap: {},
+    monsterConfigMap: {},
   };
 
   setHandler(addPlayerUpdate, (input: AddPlayerInput): AddPlayerOuptut => {
@@ -68,6 +70,28 @@ export async function runGame(): Promise<string> {
     }
   });
 
+  setHandler(saveMonsterConfig, async (input: SaveMonsterConfigInput): Promise<void> => {
+    const { playerId, config } = input;
+
+    if (gameState.state !== 'MonsterConfigPhase') {
+      log.warn(`Game is not in MonsterConfigPhase; cannot save monster config.`);
+      return;
+    }
+    if (gameState.monsterConfigMap[playerId]) {
+      log.warn(`Player ${playerId} already has a monster config; bypassing save.`);
+      return;
+    }
+
+    gameState.monsterConfigMap[playerId] = config;
+    log.info(`Saved monster config for player ${playerId}: ${JSON.stringify(config)}`);
+
+    if (Object.keys(gameState.monsterConfigMap).length === gameState.maxPlayers) {
+      setHandler(saveMonsterConfig, undefined);
+      gameState.state = 'BattleResolutionPhase';
+      log.info(`All players have monster configs; transitioning to BattleResolutionPhase.`);
+    }
+  });
+
   setHandler(getGameStateQuery, (input: GetGameStateInput): GameState => {
     log.info(`Game state requested for game ID: ${input.gameId}`);
     return gameState;
@@ -80,6 +104,12 @@ export async function runGame(): Promise<string> {
 
   await condition(() => gameState.state === 'MonsterConfigPhase');
   log.info(`Game is now in MonsterConfigPhase. Players are configuring their monsters.`);
+  // Each players' client should send a saveMonsterConfig signal.
+  // When a monster config has been received by all players, the game will
+  // transition to BattleResolutionPhase.
+
+  await condition(() => gameState.state === 'BattleResolutionPhase');
+  log.info(`Game is now in BattleResolutionPhase. Players are battling.`);
 
   gameState.state = 'GameOver';
   return `Game ended... but was it ever really started?`;

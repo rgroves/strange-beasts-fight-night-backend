@@ -2,8 +2,15 @@ import { Connection, Client, WithStartWorkflowOperation } from '@temporalio/clie
 import express, { Request, Response } from 'express';
 import debug from 'debug';
 
-import { addPlayerUpdate, getGameStateQuery, startMonsterImageGen, TASK_QUEUE_NAME } from '../shared';
+import {
+  addPlayerUpdate,
+  getGameStateQuery,
+  saveMonsterConfig,
+  startMonsterImageGen,
+  TASK_QUEUE_NAME,
+} from '../shared';
 import { runGame } from '../workflows';
+import { GameId, MonsterConfig, PlayerId, Vitality } from '../types';
 
 const dbglogger = debug('giant-monster-brawl:server');
 const app = express();
@@ -133,6 +140,44 @@ app.get('/doodle/:gameId/:playerId', async (req: Request, res: Response) => {
 
   res.json({ gameId, playerId });
 });
+
+interface MonsterConfigCreateRouteParams {
+  gameId: GameId;
+  playerId: PlayerId;
+}
+
+// TODO: This should be a POST request: POST /game/:gameId/player/:playerId/monster-config
+app.get(
+  '/game/:gameId/player/:playerId/monster-config',
+  async (req: Request<MonsterConfigCreateRouteParams, unknown, unknown, MonsterConfig>, res: Response) => {
+    const { gameId, playerId } = req.params;
+    const { name, description, monsterType, attackTypes, power, defense, speed, maxHealth } = req.query;
+    const monsterConfig: MonsterConfig = {
+      name,
+      description,
+      monsterType,
+      attackTypes: Array.isArray(attackTypes) ? attackTypes : [attackTypes],
+      power,
+      defense,
+      speed,
+      maxHealth,
+      currentHealth: maxHealth,
+      startingVitality: Vitality.Fresh,
+      currentVitality: Vitality.Fresh,
+    };
+
+    dbglogger(`Received request to save monster config for game ${gameId} for player ${playerId}`);
+    dbglogger(`Monster config: ${JSON.stringify(monsterConfig)}`);
+
+    const handle = temporalClient?.workflow.getHandle(gameId);
+    await handle?.signal(saveMonsterConfig, {
+      playerId,
+      config: monsterConfig,
+    });
+
+    res.status(200).send();
+  },
+);
 
 app.listen(port, async () => {
   dbglogger('Connecting to Temporal server.');
