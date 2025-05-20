@@ -12,7 +12,7 @@ import {
   StartMonsterImageGenInput,
 } from './types';
 
-const { generateMockBattleData, generateMonsterImage } = proxyActivities<typeof activities>({
+const { generateBattleCommentary, generateMockBattleData, generateMonsterImage } = proxyActivities<typeof activities>({
   startToCloseTimeout: '5 minutes',
   retry: {
     maximumAttempts: 3,
@@ -119,9 +119,23 @@ export async function runGame(): Promise<string> {
   // TODO: For MVP, just generate a mock battle; future versions should allow more
   // player control and strategy.
   const gameId = workflowInfo().workflowId;
-  log.info(`Generatign ID: ${gameId}`);
-  const fightDetails = await generateMockBattleData({ gameId, monsterConfigMap: gameState.monsterConfigMap });
-  log.info(`Fight details: ${JSON.stringify(fightDetails)}`);
+  log.info(`Generating Battle Data for gameId: ${gameId}`);
+
+  const { filePath: fightDetailsFilePath } = await generateMockBattleData({
+    gameId,
+    monsterConfigMap: gameState.monsterConfigMap,
+  });
+  log.info(`Fight details file: ${JSON.stringify(fightDetailsFilePath)}`);
+
+  gameState.state = 'BattleCommentaryPhase';
+  log.info(`Game is now in BattleCommentaryPhase. Generating battle commentary...`);
+
+  const { battleCommentaryfilePath } = await generateBattleCommentary({
+    gameId,
+    fightDetailsFilePath,
+  });
+
+  log.info(`Battle commentary file: ${JSON.stringify(battleCommentaryfilePath)}`);
 
   gameState.state = 'GameOver';
   return `Game ended... but was it ever really started?`;

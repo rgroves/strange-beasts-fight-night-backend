@@ -65,7 +65,13 @@ export type Player = {
 };
 
 export type GameState = {
-  state: 'LobbyPhase' | 'DrawingPhase' | 'MonsterConfigPhase' | 'BattleResolutionPhase' | 'GameOver';
+  state:
+    | 'LobbyPhase'
+    | 'DrawingPhase'
+    | 'MonsterConfigPhase'
+    | 'BattleResolutionPhase'
+    | 'BattleCommentaryPhase'
+    | 'GameOver';
   maxPlayers: number;
   players: Player[];
   monsterImageMap: Record<PlayerId, FilePath>;
@@ -77,7 +83,7 @@ export interface MonsterConfig {
   description: string;
   monsterType: string;
   attackTypes: string[];
-  specialAbilities?: string[];
+  specialAbilities: string[];
   power: AbilityScore;
   defense: AbilityScore;
   speed: AbilityScore;

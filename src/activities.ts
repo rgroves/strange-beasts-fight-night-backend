@@ -20,7 +20,13 @@ interface generateMonsterImageOutput {
   filePath: FilePath;
 }
 
+const MONSTER_GEN_STUB = true; // TODO: Remove this stub when the real monster generation is needed
 export async function generateMonsterImage(input: generateMonsterImageInput): Promise<generateMonsterImageOutput> {
+  if (MONSTER_GEN_STUB) {
+    log.info('Monster generation stub is enabled; returning stub image path.');
+    return { filePath: '/tmp/stub-monster-image.png' };
+  }
+
   log.info(`Generating monster image with doodle file: ${JSON.stringify(input)}`);
   const { doodleFilePath, prompt, style } = input;
 
@@ -79,4 +85,89 @@ export async function generateMockBattleData({
 }: generateBattleInput): Promise<generateMockBattleOutput> {
   log.info(`Generating mock battle data for game ID: ${gameId}`);
   return generateMockBattle(gameId, monsterConfigMap);
+}
+
+interface generateBattleCommentaryInput {
+  gameId: GameId;
+  fightDetailsFilePath: FilePath;
+}
+
+interface generateBattleCommentaryOutput {
+  battleCommentaryfilePath: FilePath;
+}
+
+const BATTLE_COMMENTARY_STUB = false; // TODO: Remove this stub when the real battle commentary generation is needed
+export async function generateBattleCommentary({
+  gameId,
+  fightDetailsFilePath,
+}: generateBattleCommentaryInput): Promise<generateBattleCommentaryOutput> {
+  // read prompt instruction from file fight-announcer-prompt.txt
+  const inputFilePath = path.resolve(__dirname, './server/ai', 'fight-announcer-prompt.txt');
+  log.info(`Loading input from: ${inputFilePath}`);
+  const prompt = await fs.readFile(inputFilePath, 'utf-8');
+
+  const fightDetails = await fs.readFile(fightDetailsFilePath, 'utf-8');
+  log.info(`Fight details loaded from: ${fightDetailsFilePath}`);
+
+  log.info(`The prompt is: ${prompt}`);
+  log.info(`The fight details are: ${JSON.stringify(fightDetails)}`);
+  log.info('Calling OpenAI API to generate battle commentary...');
+
+  if (BATTLE_COMMENTARY_STUB) {
+    log.info('Battle commentary generation stub is enabled; returning stub file path.');
+    return { battleCommentaryfilePath: '/tmp/stub-battle-commentary.txt' };
+  }
+
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    organization: process.env.OPENAI_ORG_ID,
+  });
+
+  const response = await openai.responses.create({
+    model: 'o4-mini',
+    input: [
+      {
+        role: 'developer',
+        content: [
+          {
+            type: 'input_text',
+            text: prompt,
+          },
+        ],
+      },
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'input_text',
+            text: JSON.stringify(fightDetails),
+          },
+        ],
+      },
+    ],
+    text: {
+      format: {
+        type: 'text',
+      },
+    },
+    reasoning: {
+      effort: 'low',
+      summary: 'auto',
+    },
+    tools: [],
+    store: false,
+  });
+
+  const battleCommentary = response.output_text;
+  log.info('OpenAI API response received.');
+  log.info(`Response: ${JSON.stringify(response.output_text)}`);
+
+  const tmpDir = os.tmpdir();
+  const fileName = `${gameId}-battle-commentary.txt`;
+  const battleCommentaryfilePath = path.join(tmpDir, fileName);
+  await fs.writeFile(battleCommentaryfilePath, battleCommentary);
+
+  return {
+    battleCommentaryfilePath,
+  };
 }

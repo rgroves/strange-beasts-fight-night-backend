@@ -12,15 +12,24 @@ Keep descriptions of attacks short, punchy, and colorful.
 ```
 root object
   fighters            array<object>   required
-    name              string          required, must be unique
+    name              string          required, unique
+    description       string          required
     monsterType       string          required
     attackTypes       array<string>   required
-    maxHealth         number          required
-    currentHealth     number          required
+    specialAbilities  array<string>   optional
+    power             number          required, min=1, max=6
+    defense           number          required, min=1, max=6
+    speed             number          required, min=1, max=6
+    maxHealth         number          required, min=1, max=6
+    currentHealth     number          required, min=1, max=6
+    startingVitality  string          required
+    currentVitality   string          required
   turns               array<object>   required, length <= 5
     attacks           array<object>   required
       attacker        string          required, must match a fighter name
       target          string          required, must match a fighter name
+      attackType      stirng          required
+      damage          number          required
       result          string          required, one of ["Defending", "Miss","Glancing Blow","Direct Hit","Critical Hit"]
     endOfTurnStatus   array<object>   required
       fighter         string          required, must match a fighter name

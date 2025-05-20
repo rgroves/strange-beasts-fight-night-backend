@@ -151,17 +151,25 @@ app.get(
   '/game/:gameId/player/:playerId/monster-config',
   async (req: Request<MonsterConfigCreateRouteParams, unknown, unknown, MonsterConfig>, res: Response) => {
     const { gameId, playerId } = req.params;
-    const { name, description, monsterType, attackTypes, power, defense, speed, maxHealth } = req.query;
+    const { name, description, monsterType, attackTypes, specialAbilities, power, defense, speed, maxHealth } =
+      req.query;
+
+    const attackTypesArray = Array.isArray(attackTypes) ? attackTypes : [attackTypes];
+    const specialAbilitiesArray =
+      specialAbilities && Array.isArray(specialAbilities) ? specialAbilities : [specialAbilities];
+
     const monsterConfig: MonsterConfig = {
       name,
       description,
       monsterType,
-      attackTypes: Array.isArray(attackTypes) ? attackTypes : [attackTypes],
-      power,
-      defense,
-      speed,
-      maxHealth,
-      currentHealth: maxHealth,
+      attackTypes: attackTypesArray,
+      specialAbilities: specialAbilitiesArray,
+      power: +power,
+      defense: +defense,
+      speed: +speed,
+      maxHealth: +maxHealth,
+      // TODO Ideally the attributes below become dynamically calcuable and not needed to be slammed in here
+      currentHealth: +maxHealth,
       startingVitality: Vitality.Fresh,
       currentVitality: Vitality.Fresh,
     };
