@@ -8,8 +8,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
-    "start": "ts-node src/worker.ts",
-    "start.watch": "nodemon src/worker.ts",
+    "worker": "ts-node src/worker.ts",
+    "worker:dev": "nodemon src/worker.ts",
     "server:dev": "DEBUG=giant-monster-brawl:*, nodemon src/server/app.ts",
     "test": "mocha --exit --require ts-node/register --require source-map-support/register src/mocha/*.test.ts",
     "temporal:dev": "temporal server start-dev --ui-port 8080"
