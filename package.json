@@ -28,6 +28,7 @@
     "@temporalio/client": "^1.11.6",
     "@temporalio/worker": "^1.11.6",
     "@temporalio/workflow": "^1.11.6",
+    "cors": "^2.8.5",
     "debug": "^4.4.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@temporalio/testing": "^1.11.6",
     "@tsconfig/node18": "^18.2.4",
+    "@types/cors": "^2.8.18",
     "@types/debug": "^4.1.12",
     "@types/express": "^5.0.1",
     "@types/mocha": "8.x",
