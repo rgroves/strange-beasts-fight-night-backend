@@ -1,8 +1,9 @@
 import express, { Request, Response } from 'express';
+import path from 'path';
 import debug from 'debug';
 import cors from 'cors';
 
-import { addPlayerUpdate, saveMonsterConfig, startMonsterImageGen } from '../shared';
+import { saveMonsterConfig, startMonsterImageGen } from '../shared';
 import { GameId, MonsterConfig, PlayerId, Vitality } from '../types';
 import temporalClient from './temporal-client';
 import apiV1Router from './api-v1-router';
@@ -38,6 +39,8 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use('/static/gaem-assets', express.static(path.join(__dirname, 'public', 'game-assets')));
 
 app.get('/', (req: Request, res: Response) => {
   dbglogger('Received request to root endpoint');
