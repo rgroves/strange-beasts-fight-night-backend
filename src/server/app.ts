@@ -1,17 +1,11 @@
-import { Connection, Client, WithStartWorkflowOperation } from '@temporalio/client';
+import { Connection, Client } from '@temporalio/client';
 import express, { Request, Response } from 'express';
 import debug from 'debug';
 import cors from 'cors';
 
-import {
-  addPlayerUpdate,
-  getGameStateQuery,
-  saveMonsterConfig,
-  startMonsterImageGen,
-  TASK_QUEUE_NAME,
-} from '../shared';
-import { runGame } from '../workflows';
+import { addPlayerUpdate, getGameStateQuery, saveMonsterConfig, startMonsterImageGen } from '../shared';
 import { GameId, MonsterConfig, PlayerId, Vitality } from '../types';
+import GameController from './game-controller';
 
 const dbglogger = debug('giant-monster-brawl:server');
 const app = express();
@@ -69,28 +63,19 @@ app.get('/', (req: Request, res: Response) => {
 // TODO: NOTE - using GET for quick and easy testing from a browser purposes need to come back and refactor routes
 
 // TODO: This should be a POST request: POST /game/:gameId
-app.get('/start/:gameId', async (req: Request, res: Response) => {
-  const { gameId } = req.params;
-  const playerId = 'player 1';
-  dbglogger(`Received request to start game with workflow ID ${gameId}`);
+app.get('/start/', async (req: Request, res: Response) => {
+  const playerIdIn = 'player 1';
+  dbglogger(`Received request to start game`);
 
-  const startWorkflowOperation = new WithStartWorkflowOperation(runGame, {
-    workflowId: gameId,
-    args: [],
-    taskQueue: TASK_QUEUE_NAME,
-    workflowIdConflictPolicy: 'FAIL',
-  });
+  if (!temporalClient || !temporalClient.connection) {
+    dbglogger('Temporal client is not initialized properly.');
+    res.status(500).json({ error: 'Lost Temporal Connection' });
+    return;
+  }
 
-  const recievedPlayerId = await temporalClient?.workflow.executeUpdateWithStart(addPlayerUpdate, {
-    startWorkflowOperation,
-    args: [{ requestedPlayerId: playerId }],
-  });
-
-  const handle = await startWorkflowOperation.workflowHandle();
-  dbglogger(`handle: ${JSON.stringify(handle)}`);
-
-  dbglogger(`Game Start Queued with workflow ID: ${gameId}`);
-  res.json({ gameId, playerId: recievedPlayerId });
+  const gameController = new GameController(temporalClient);
+  const { gameId, playerId } = await gameController.startGame({ playerId: playerIdIn });
+  res.json({ gameId, playerId });
 });
 
 // TODO: this should be a GET request to /game/:gameId
