@@ -1,6 +1,7 @@
 import { Connection, Client, WithStartWorkflowOperation } from '@temporalio/client';
 import express, { Request, Response } from 'express';
 import debug from 'debug';
+import cors from 'cors';
 
 import {
   addPlayerUpdate,
@@ -52,6 +53,13 @@ async function createClient() {
     // namespace: 'foo.bar', // connects to 'default' namespace if not specified
   });
 }
+
+app.use(
+  cors({
+    origin: 'http://127.0.0.1:5173',
+    credentials: true,
+  }),
+);
 
 app.get('/', (req: Request, res: Response) => {
   dbglogger('Received request to root endpoint');
