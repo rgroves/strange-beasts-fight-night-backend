@@ -6,6 +6,7 @@ import { addPlayerUpdate, getGameStateQuery, saveMonsterConfig, startMonsterImag
 import { GameId, MonsterConfig, PlayerId, Vitality } from '../types';
 import GameController from './game-controller';
 import temporalClient from './temporal-client';
+import apiV1Router from './api-v1-router';
 
 const dbglogger = debug('giant-monster-brawl:server');
 const app = express();
@@ -156,6 +157,8 @@ app.get(
     res.status(200).send();
   },
 );
+
+app.use('/api/v1/', apiV1Router);
 
 app.listen(port, async () => {
   dbglogger(`Server is listening (port: ${port}).`);

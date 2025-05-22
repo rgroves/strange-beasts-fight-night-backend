@@ -36,9 +36,6 @@ export default class GameController {
       args: [{ requestedPlayerId }],
     });
 
-    const handle = await startWorkflowOperation.workflowHandle();
-    dbglogger(`handle: ${JSON.stringify(handle)}`);
-
     dbglogger(`A runGame workflow execution was queued: WorkflowId(${workflowId}) PlayerId(${playerId})`);
 
     return { gameId: workflowId, playerId };
