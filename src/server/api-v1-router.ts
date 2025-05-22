@@ -41,4 +41,12 @@ apiV1Router.get('/game/:gameId', async (req: Request, res: Response) => {
   }
 });
 
+apiV1Router.put('/game/:gameId/player/:requestedPlayerId', async (req: Request, res: Response) => {
+  const { gameId, requestedPlayerId } = req.params;
+  dbglogger(`Received request to join game ${gameId} with player ID ${requestedPlayerId}`);
+  const { playerId } = await gameController.addPlayer({ gameId, requestedPlayerId });
+  dbglogger(`Added player ID: ${playerId}`);
+  res.json({ gameId, playerId });
+});
+
 export default apiV1Router;

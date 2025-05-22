@@ -16,6 +16,15 @@ interface StartGameOutput {
   playerId: PlayerId;
 }
 
+interface AddPlayerInput {
+  gameId: GameId;
+  requestedPlayerId: PlayerId;
+}
+
+interface AddPlayerOuptut {
+  playerId: PlayerId;
+}
+
 export default class GameController {
   private client: Client;
 
@@ -53,6 +62,17 @@ export default class GameController {
 
     dbglogger(`Game state for ${gameId}: ${JSON.stringify(result)}`);
     return result;
+  };
+
+  public addPlayer = async ({ gameId, requestedPlayerId }: AddPlayerInput): Promise<AddPlayerOuptut> => {
+    dbglogger(`Received request to join game ${gameId} with player ID ${requestedPlayerId}`);
+    const handle = this.client.workflow.getHandle(gameId);
+    const { playerId } = await handle.executeUpdate(addPlayerUpdate, {
+      args: [{ requestedPlayerId }],
+    });
+
+    dbglogger(`Added player ID: ${playerId}`);
+    return { playerId };
   };
 }
 

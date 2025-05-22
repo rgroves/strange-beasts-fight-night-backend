@@ -46,20 +46,6 @@ app.get('/', (req: Request, res: Response) => {
 
 // TODO: NOTE - using GET for quick and easy testing from a browser purposes need to come back and refactor routes
 
-// TODO: This should be a POST request
-app.get('/join/:gameId/:playerId', async (req: Request, res: Response) => {
-  const { gameId, playerId } = req.params;
-  dbglogger(`Received request to join game ${gameId} with player ID ${playerId}`);
-
-  const handle = temporalClient?.workflow.getHandle(gameId);
-  const addPlayerResponse = await handle?.executeUpdate(addPlayerUpdate, {
-    args: [{ requestedPlayerId: playerId }],
-  });
-
-  dbglogger(`Added player ID: ${addPlayerResponse?.playerId}`);
-  res.json({ gameId, playerId: addPlayerResponse });
-});
-
 // TODO: This should be a POST request: POST /game/:gameId/player/:playerId/doodle
 app.get('/doodle/:gameId/:playerId', async (req: Request, res: Response) => {
   const { gameId, playerId } = req.params;
