@@ -2,9 +2,8 @@ import express, { Request, Response } from 'express';
 import debug from 'debug';
 import cors from 'cors';
 
-import { addPlayerUpdate, getGameStateQuery, saveMonsterConfig, startMonsterImageGen } from '../shared';
+import { addPlayerUpdate, saveMonsterConfig, startMonsterImageGen } from '../shared';
 import { GameId, MonsterConfig, PlayerId, Vitality } from '../types';
-import GameController from './game-controller';
 import temporalClient from './temporal-client';
 import apiV1Router from './api-v1-router';
 
@@ -46,32 +45,6 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // TODO: NOTE - using GET for quick and easy testing from a browser purposes need to come back and refactor routes
-
-// TODO: This should be a POST request: POST /game/:gameId
-app.get('/start/', async (req: Request, res: Response) => {
-  dbglogger(`Received request to start game.`);
-  const gameController = new GameController(temporalClient);
-  const playerIdIn = 'player 1';
-  const { gameId, playerId } = await gameController.startGame({ playerId: playerIdIn });
-  res.status(201).json({ gameId, playerId });
-});
-
-// TODO: this should be a GET request to /game/:gameId
-app.get('/inspect/:gameId', async (req: Request, res: Response) => {
-  const { gameId } = req.params;
-  dbglogger(`Received request to inspect game ${gameId}`);
-
-  const handle = temporalClient?.workflow.getHandle(gameId);
-  const result = await handle?.query(getGameStateQuery, { gameId });
-
-  if (result) {
-    dbglogger(`Game state for ${gameId}: ${JSON.stringify(result)}`);
-    res.json(result);
-  } else {
-    dbglogger(`No game found with ID ${gameId}`);
-    res.status(404).json({ error: 'Game not found' });
-  }
-});
 
 // TODO: This should be a POST request
 app.get('/join/:gameId/:playerId', async (req: Request, res: Response) => {

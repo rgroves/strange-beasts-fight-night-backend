@@ -2,6 +2,7 @@ import debug from 'debug';
 import express, { Request, Response } from 'express';
 import temporalClient from './temporal-client';
 import GameController from './game-controller';
+import { GameNotFoundError } from './game-errors';
 
 const dbglogger = debug('giant-monster-brawl:server:api-v1-router');
 
@@ -19,6 +20,25 @@ apiV1Router.post('/game/', async (request: Request, res: Response) => {
   const { playerId: requestedPlayerId } = request.body;
   const { gameId, playerId } = await gameController.startGame({ playerId: requestedPlayerId });
   res.send({ gameId, playerId });
+});
+
+apiV1Router.get('/game/:gameId', async (req: Request, res: Response) => {
+  const { gameId } = req.params;
+  dbglogger(`Received request for state of game: ${gameId}`);
+
+  try {
+    const gameState = await gameController.getGameState(gameId);
+    res.json(gameState);
+  } catch (error) {
+    if (error instanceof GameNotFoundError) {
+      dbglogger(`No game found with gameId: ${gameId}`);
+      res.status(404).json({});
+    } else {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      dbglogger(`Failed to retrieve game state; ${errorMessage}`);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
 });
 
 export default apiV1Router;

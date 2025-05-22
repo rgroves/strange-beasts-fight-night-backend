@@ -3,6 +3,7 @@ import { addPlayerUpdate, TASK_QUEUE_NAME } from '../shared';
 import { runGame } from '../workflows';
 import { GameId, PlayerId } from '../types';
 import debug from 'debug';
+import { GameNotFoundError } from './game-errors';
 
 const dbglogger = debug('giant-monster-brawl:game-controller');
 
@@ -39,6 +40,19 @@ export default class GameController {
     dbglogger(`A runGame workflow execution was queued: WorkflowId(${workflowId}) PlayerId(${playerId})`);
 
     return { gameId: workflowId, playerId };
+  };
+
+  public getGameState = async (gameId: GameId) => {
+    const handle = this.client.workflow.getHandle(gameId);
+    const result = await handle.query('getGameState', { gameId });
+
+    if (!result) {
+      dbglogger(`No game found with ID ${gameId}`);
+      throw new GameNotFoundError(gameId);
+    }
+
+    dbglogger(`Game state for ${gameId}: ${JSON.stringify(result)}`);
+    return result;
   };
 }
 
