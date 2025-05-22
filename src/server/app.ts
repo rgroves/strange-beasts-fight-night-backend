@@ -1,4 +1,3 @@
-import { Connection, Client } from '@temporalio/client';
 import express, { Request, Response } from 'express';
 import debug from 'debug';
 import cors from 'cors';
@@ -6,12 +5,12 @@ import cors from 'cors';
 import { addPlayerUpdate, getGameStateQuery, saveMonsterConfig, startMonsterImageGen } from '../shared';
 import { GameId, MonsterConfig, PlayerId, Vitality } from '../types';
 import GameController from './game-controller';
+import temporalClient from './temporal-client';
 
 const dbglogger = debug('giant-monster-brawl:server');
 const app = express();
 const port = 3000;
 
-let temporalClient: Client | undefined;
 let isShuttingDown = false;
 
 process.on('SIGTERM', gracefulShutdown);
@@ -33,21 +32,6 @@ async function gracefulShutdown() {
   process.exit(0);
 }
 
-async function createClient() {
-  // Connect to the default Server location
-  const connection = await Connection.connect({ address: 'localhost:7233' });
-  // In production, pass options to configure TLS and other settings:
-  // {
-  //   address: 'foo.bar.tmprl.cloud',
-  //   tls: {}
-  // }
-
-  return new Client({
-    connection,
-    // namespace: 'foo.bar', // connects to 'default' namespace if not specified
-  });
-}
-
 app.use(
   cors({
     origin: 'http://127.0.0.1:5173',
@@ -64,18 +48,11 @@ app.get('/', (req: Request, res: Response) => {
 
 // TODO: This should be a POST request: POST /game/:gameId
 app.get('/start/', async (req: Request, res: Response) => {
-  const playerIdIn = 'player 1';
-  dbglogger(`Received request to start game`);
-
-  if (!temporalClient || !temporalClient.connection) {
-    dbglogger('Temporal client is not initialized properly.');
-    res.status(500).json({ error: 'Lost Temporal Connection' });
-    return;
-  }
-
+  dbglogger(`Received request to start game.`);
   const gameController = new GameController(temporalClient);
+  const playerIdIn = 'player 1';
   const { gameId, playerId } = await gameController.startGame({ playerId: playerIdIn });
-  res.json({ gameId, playerId });
+  res.status(201).json({ gameId, playerId });
 });
 
 // TODO: this should be a GET request to /game/:gameId
@@ -181,9 +158,5 @@ app.get(
 );
 
 app.listen(port, async () => {
-  dbglogger('Connecting to Temporal server.');
-  temporalClient = await createClient();
-  dbglogger('Connected to Temporal server.');
-
   dbglogger(`Server is listening (port: ${port}).`);
 });
