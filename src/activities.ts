@@ -7,11 +7,12 @@ import os from 'os';
 import path from 'path';
 import generateMockBattle from './battle-logic';
 import { FilePath, GameId, MonsterConfig, PlayerId } from './types';
+import { GAME_ASSETS_DIR } from './nd-shared';
 
 config();
 
 interface generateMonsterImageInput {
-  doodleFilePath: string;
+  doodleFileName: string;
   prompt: string;
   style: string;
 }
@@ -20,7 +21,7 @@ interface generateMonsterImageOutput {
   filePath: FilePath;
 }
 
-const MONSTER_GEN_STUB = true; // TODO: Remove this stub when the real monster generation is needed
+const MONSTER_GEN_STUB = false; // TODO: Remove this stub when the real monster generation is needed
 export async function generateMonsterImage(input: generateMonsterImageInput): Promise<generateMonsterImageOutput> {
   if (MONSTER_GEN_STUB) {
     log.info('Monster generation stub is enabled; returning stub image path.');
@@ -28,10 +29,10 @@ export async function generateMonsterImage(input: generateMonsterImageInput): Pr
   }
 
   log.info(`Generating monster image with doodle file: ${JSON.stringify(input)}`);
-  const { doodleFilePath, prompt, style } = input;
-
+  const { doodleFileName, prompt, style } = input;
+  const doodleFilePath = path.resolve(GAME_ASSETS_DIR, doodleFileName);
   const doodleFileContent = await fs.readFile(doodleFilePath);
-  const doodleFile = await toFile(doodleFileContent, 'doodle.png', { type: 'image/png' });
+  const doodleFile = await toFile(doodleFileContent, doodleFileName, { type: 'image/png' });
 
   log.info('Initializing OpenAI API...');
   const openai = new OpenAI({
@@ -59,9 +60,8 @@ export async function generateMonsterImage(input: generateMonsterImageInput): Pr
   const b64ImageData = response.data[0].b64_json as string;
   const imgBuffer = Buffer.from(b64ImageData, 'base64');
 
-  const tmpDir = os.tmpdir();
-  const fileName = `openai-image-${crypto.randomUUID()}-${doodleFilePath.split('/').pop()}`;
-  const filePath = path.join(tmpDir, fileName);
+  const fileName = `openai-image-${crypto.randomUUID()}-${doodleFileName}`;
+  const filePath = path.join(GAME_ASSETS_DIR, fileName);
 
   log.info(`Saving image to '${filePath}'...`);
   await fs.writeFile(filePath, imgBuffer);

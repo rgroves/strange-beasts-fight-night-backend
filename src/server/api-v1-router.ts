@@ -7,7 +7,7 @@ import express, { Request, Response } from 'express';
 import temporalClient from './temporal-client';
 import GameController from './game-controller';
 import { GameNotFoundError } from './game-errors';
-import { GAME_ASSETS_DIR } from './shared';
+import { GAME_ASSETS_DIR } from '../nd-shared';
 
 const dbglogger = debug('giant-monster-brawl:server:api-v1-router');
 
@@ -56,8 +56,9 @@ apiV1Router.put('/game/:gameId/player/:requestedPlayerId', async (req: Request, 
 
 apiV1Router.put('/game/:gameId/player/:playerId/doodle', async (req: Request, res: Response) => {
   const { gameId, playerId } = req.params;
-  dbglogger(`Received request to save doodle for game ${gameId} and player ${playerId}`);
-  const dataUri = req.body.image;
+  dbglogger(`Received request to save doodle for game ${gameId} player ${playerId}`);
+  const { image: dataUri, monsterDescription } = req.body;
+  dbglogger('...with monster description:', monsterDescription);
   dbglogger('...with doodle data URI:', dataUri);
 
   const matches = dataUri.match(/^data:(image\/png);base64,([A-Za-z0-9+/=]+)$/);
@@ -81,12 +82,21 @@ apiV1Router.put('/game/:gameId/player/:playerId/doodle', async (req: Request, re
     return;
   }
 
-  const fileName = `${gameId}-${playerId}-doodle.png`;
-  const filePath = path.join(GAME_ASSETS_DIR, fileName);
+  const doodleFileName = `${gameId}-${playerId}-doodle.png`;
+  const filePath = path.join(GAME_ASSETS_DIR, doodleFileName);
   await fs.promises.writeFile(filePath, imgBuf);
-  dbglogger(`Saved doodle to ${filePath}`);
+  dbglogger(`Saved player ${playerId} doodle to ${filePath}`);
 
-  res.json({ fileName });
+  dbglogger(`Received request to generate monster image for game ${gameId} for player ${playerId}`);
+
+  await gameController.uploadDoodle({
+    gameId,
+    playerId,
+    monsterDescription,
+    doodleFileName,
+  });
+
+  res.json({ fileName: doodleFileName });
 });
 
 export default apiV1Router;

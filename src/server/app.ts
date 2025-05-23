@@ -3,7 +3,7 @@ import path from 'path';
 import debug from 'debug';
 import cors from 'cors';
 
-import { saveMonsterConfig, startMonsterImageGen } from '../shared';
+import { saveMonsterConfig } from '../shared';
 import { GameId, MonsterConfig, PlayerId, Vitality } from '../types';
 import temporalClient from './temporal-client';
 import apiV1Router from './api-v1-router';
@@ -48,31 +48,6 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // TODO: NOTE - using GET for quick and easy testing from a browser purposes need to come back and refactor routes
-
-// TODO: This should be a POST request: POST /game/:gameId/player/:playerId/doodle
-app.get('/doodle/:gameId/:playerId', async (req: Request, res: Response) => {
-  const { gameId, playerId } = req.params;
-  // const doodleFilePath = `/tmp/${gameId}-${playerId}-doodle.png`;
-  const doodleFilePath = `/tmp/test-doodle-${playerId.replace(' ', '-')}.png`;
-  // TODO Remove prompt stubs and get it from the POST payload
-  const prompt =
-    playerId === 'player 1'
-      ? 'Inspired by my doodle, generate a giant arachnid-like monster angled facing to the right. It is a tarantula from outer space. It shoots red-hot plasma from its eyes and the tail produces clouds of green noxious gas.'
-      : 'Inspired by my doodle, generate a giant arachnid-like monster angled facing to the left. It is a steampunk automoton version of a scorpion. It shoots glowing red "retro ray gun-styled" rays from its eyes and the tail emits sparks of green lightning.';
-  const style = 'retro sci-fi pulp magazine illustration';
-
-  dbglogger(`Received request to generate monster image for game ${gameId} for player ${playerId}`);
-
-  const handle = temporalClient?.workflow.getHandle(gameId);
-  await handle?.signal(startMonsterImageGen, {
-    playerId,
-    doodleFilePath,
-    prompt,
-    style,
-  });
-
-  res.json({ gameId, playerId });
-});
 
 interface MonsterConfigCreateRouteParams {
   gameId: GameId;

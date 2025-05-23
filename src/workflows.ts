@@ -49,7 +49,7 @@ export async function runGame(): Promise<string> {
   });
 
   setHandler(startMonsterImageGen, async (input: StartMonsterImageGenInput): Promise<void> => {
-    const { playerId, doodleFilePath, prompt, style } = input;
+    const { playerId, doodleFileName, prompt, style } = input;
 
     if (gameState.state !== 'DrawingPhase') {
       log.warn(`Game is not in DrawingPhase; cannot generate monster image.`);
@@ -62,7 +62,7 @@ export async function runGame(): Promise<string> {
     }
 
     const generatedImage = await generateMonsterImage({
-      doodleFilePath,
+      doodleFileName,
       prompt,
       style,
     });

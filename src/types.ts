@@ -141,7 +141,7 @@ export interface FightDetails {
 // ======================================
 export interface StartMonsterImageGenInput {
   playerId: PlayerId;
-  doodleFilePath: FilePath;
+  doodleFileName: string;
   prompt: string;
   style: string;
 }

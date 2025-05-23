@@ -1,5 +1,5 @@
 import { WithStartWorkflowOperation, type Client } from '@temporalio/client';
-import { addPlayerUpdate, TASK_QUEUE_NAME } from '../shared';
+import { addPlayerUpdate, startMonsterImageGen, TASK_QUEUE_NAME } from '../shared';
 import { runGame } from '../workflows';
 import { GameId, PlayerId } from '../types';
 import debug from 'debug';
@@ -23,6 +23,13 @@ interface AddPlayerInput {
 
 interface AddPlayerOuptut {
   playerId: PlayerId;
+}
+
+interface UploadDoodleInput {
+  gameId: GameId;
+  playerId: PlayerId;
+  monsterDescription: string;
+  doodleFileName: string;
 }
 
 export default class GameController {
@@ -73,6 +80,28 @@ export default class GameController {
 
     dbglogger(`Added player ID: ${playerId}`);
     return { playerId };
+  };
+
+  public uploadDoodle = async ({
+    gameId,
+    playerId,
+    monsterDescription,
+    doodleFileName,
+  }: UploadDoodleInput): Promise<void> => {
+    const prompt = `Inspired by my doodle, generate: ${monsterDescription}`;
+    const style = 'retro sci-fi pulp magazine illustration';
+
+    dbglogger(`Sending request to generate monster image for game ${gameId} for player ${playerId}`);
+
+    const handle = this.client.workflow.getHandle(gameId);
+    await handle?.signal(startMonsterImageGen, {
+      playerId,
+      doodleFileName,
+      prompt,
+      style,
+    });
+
+    dbglogger(`Monster image generation request was sent for game ${gameId} for player ${playerId}`);
   };
 }
 
