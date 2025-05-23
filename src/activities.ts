@@ -178,7 +178,7 @@ interface generateBattleAudioInput {
 }
 
 interface generateBattleAudioOutput {
-  battleAudioFilePath: FilePath;
+  battleAudioFileName: string;
 }
 
 export async function generateBattleAudio({
@@ -199,7 +199,8 @@ export async function generateBattleAudio({
 
   const [instructions, input] = await Promise.all([asyncInstructions, asyncInput]);
 
-  const battleAudiofilePath = path.resolve(`./${gameId}-speech.mp3`);
+  const battleAudioFileName = `${gameId}-${crypto.randomUUID()}-battle-audio.mp3`;
+  const battleAudiofilePath = path.resolve(GAME_ASSETS_DIR, battleAudioFileName);
   console.log('Saving audio to:', battleAudiofilePath);
 
   const mp3 = await openai.audio.speech.create({
@@ -215,6 +216,6 @@ export async function generateBattleAudio({
   await fs.writeFile(battleAudiofilePath, buffer);
 
   return {
-    battleAudioFilePath: battleAudiofilePath,
+    battleAudioFileName,
   };
 }

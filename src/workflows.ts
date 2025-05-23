@@ -31,7 +31,7 @@ export async function runGame(): Promise<string> {
     players: [],
     monsterImageMap: {},
     monsterConfigMap: {},
-    audioFilePath: '',
+    battleAudioFileName: '',
   };
 
   setHandler(addPlayerUpdate, (input: AddPlayerInput): AddPlayerOuptut => {
@@ -144,13 +144,13 @@ export async function runGame(): Promise<string> {
   gameState.state = 'AudioGenerationPhase';
   log.info(`Game is now in AudioGenerationPhase. Generating battle audio...`);
 
-  const { battleAudioFilePath } = await generateBattleAudio({
+  const { battleAudioFileName } = await generateBattleAudio({
     gameId,
     battleCommentaryfilePath,
   });
 
-  gameState.audioFilePath = battleAudioFilePath;
-  log.info(`Battle audio file: ${JSON.stringify(battleAudioFilePath)}`);
+  gameState.battleAudioFileName = battleAudioFileName;
+  log.info(`Battle audio file: ${JSON.stringify(battleAudioFileName)}`);
 
   gameState.state = 'GameOver';
 

@@ -60,11 +60,11 @@ export type FilePath = string;
 export type AbilityScore = number;
 export type HealthScore = number;
 
-export type Player = {
+export interface Player {
   id: PlayerId;
-};
+}
 
-export type GameState = {
+export interface GameState {
   state:
     | 'LobbyPhase'
     | 'DrawingPhase'
@@ -77,8 +77,8 @@ export type GameState = {
   players: Player[];
   monsterImageMap: Record<PlayerId, FilePath>;
   monsterConfigMap: Record<PlayerId, MonsterConfig>;
-  audioFilePath: FilePath;
-};
+  battleAudioFileName: FilePath;
+}
 
 export interface MonsterConfig {
   name: string;
