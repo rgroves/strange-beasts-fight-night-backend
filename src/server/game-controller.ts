@@ -1,7 +1,7 @@
 import { WithStartWorkflowOperation, type Client } from '@temporalio/client';
-import { addPlayerUpdate, startMonsterImageGen, TASK_QUEUE_NAME } from '../shared';
+import { addPlayerUpdate, saveMonsterConfig, startMonsterImageGen, TASK_QUEUE_NAME } from '../shared';
 import { runGame } from '../workflows';
-import { GameId, PlayerId } from '../types';
+import { GameId, MonsterConfig, PlayerId } from '../types';
 import debug from 'debug';
 import { GameNotFoundError } from './game-errors';
 
@@ -30,6 +30,12 @@ interface UploadDoodleInput {
   playerId: PlayerId;
   monsterDescription: string;
   doodleFileName: string;
+}
+
+interface UploadMonsterConfigInput {
+  gameId: GameId;
+  playerId: PlayerId;
+  monsterConfig: MonsterConfig;
 }
 
 export default class GameController {
@@ -103,6 +109,17 @@ export default class GameController {
 
     dbglogger(`Monster image generation request was sent for game ${gameId} for player ${playerId}`);
   };
+
+  public async uploadMonsterConfig({ gameId, playerId, monsterConfig }: UploadMonsterConfigInput): Promise<void> {
+    dbglogger(`Received request to save monster config for game ${gameId} for player ${playerId}`);
+    dbglogger(`Monster config: ${JSON.stringify(monsterConfig)}`);
+
+    const handle = this.client?.workflow.getHandle(gameId);
+    await handle?.signal(saveMonsterConfig, {
+      playerId,
+      config: monsterConfig,
+    });
+  }
 }
 
 function generateGameId() {

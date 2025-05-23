@@ -8,6 +8,7 @@ import temporalClient from './temporal-client';
 import GameController from './game-controller';
 import { GameNotFoundError } from './game-errors';
 import { GAME_ASSETS_DIR } from '../nd-shared';
+import { MonsterConfig, Vitality } from '../types';
 
 const dbglogger = debug('giant-monster-brawl:server:api-v1-router');
 
@@ -97,6 +98,41 @@ apiV1Router.put('/game/:gameId/player/:playerId/doodle', async (req: Request, re
   });
 
   res.json({ fileName: doodleFileName });
+});
+
+apiV1Router.put('/game/:gameId/player/:playerId/monster-config', async (req: Request, res: Response) => {
+  const { gameId, playerId } = req.params;
+  const { name, description, monsterType, attackTypes, specialAbilities, power, defense, speed, maxHealth } = req.body;
+  const attackTypesArray = Array.isArray(attackTypes) ? attackTypes : [attackTypes];
+  const specialAbilitiesArray =
+    specialAbilities && Array.isArray(specialAbilities) ? specialAbilities : [specialAbilities];
+
+  const monsterConfig: MonsterConfig = {
+    name,
+    description,
+    monsterType,
+    attackTypes: attackTypesArray,
+    specialAbilities: specialAbilitiesArray,
+    power: +power,
+    defense: +defense,
+    speed: +speed,
+    maxHealth: +maxHealth,
+    // TODO Ideally the attributes below become dynamically calcuable and not needed to be slammed in here
+    currentHealth: +maxHealth,
+    startingVitality: Vitality.Fresh,
+    currentVitality: Vitality.Fresh,
+  };
+
+  dbglogger(`Received request to save monster config for game ${gameId} for player ${playerId}`);
+  dbglogger(`Monster config: ${JSON.stringify(monsterConfig)}`);
+
+  await gameController.uploadMonsterConfig({
+    gameId,
+    playerId,
+    monsterConfig,
+  });
+
+  res.status(200).send();
 });
 
 export default apiV1Router;
