@@ -18,14 +18,14 @@ interface generateMonsterImageInput {
 }
 
 interface generateMonsterImageOutput {
-  filePath: FilePath;
+  monsterImageFileName: string;
 }
 
 const MONSTER_GEN_STUB = false; // TODO: Remove this stub when the real monster generation is needed
 export async function generateMonsterImage(input: generateMonsterImageInput): Promise<generateMonsterImageOutput> {
   if (MONSTER_GEN_STUB) {
-    log.info('Monster generation stub is enabled; returning stub image path.');
-    return { filePath: '/tmp/stub-monster-image.png' };
+    log.info('Beast generation stub is enabled; returning stub image path.');
+    return { monsterImageFileName: 'stub-monster-image.png' };
   }
 
   log.info(`Generating monster image with doodle file: ${JSON.stringify(input)}`);
@@ -53,21 +53,22 @@ export async function generateMonsterImage(input: generateMonsterImageInput): Pr
   });
   log.info('OpenAI API response received.');
 
-  if (!response.data || response.data.length === 0) {
+  if (!response.data || response.data.length === 0 || !response.data[0].b64_json) {
     throw new Error('No image data returned from OpenAI API');
   }
 
-  const b64ImageData = response.data[0].b64_json as string;
+  const b64ImageData = response.data[0].b64_json;
   const imgBuffer = Buffer.from(b64ImageData, 'base64');
+  const fileNamePart = doodleFileName.split('.').slice(0, -1).join('.');
 
-  const fileName = `openai-image-${crypto.randomUUID()}-${doodleFileName}`;
-  const filePath = path.join(GAME_ASSETS_DIR, fileName);
+  const monsterImageFileName = `${fileNamePart}-monster-image-${crypto.randomUUID()}.png`;
+  const filePath = path.join(GAME_ASSETS_DIR, monsterImageFileName);
 
-  log.info(`Saving image to '${filePath}'...`);
+  log.info(`Saving image to: ${filePath}`);
   await fs.writeFile(filePath, imgBuffer);
   log.info('Image saved successfully.');
 
-  return { filePath };
+  return { monsterImageFileName };
 }
 
 interface generateBattleInput {

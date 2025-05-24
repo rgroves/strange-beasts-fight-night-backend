@@ -61,14 +61,14 @@ export async function runGame(): Promise<string> {
       return;
     }
 
-    const generatedImage = await generateMonsterImage({
+    const { monsterImageFileName } = await generateMonsterImage({
       doodleFileName,
       prompt,
       style,
     });
 
-    gameState.monsterImageMap[playerId] = generatedImage.filePath;
-    log.info(`Generated monster image for player ${playerId} at: ${generatedImage.filePath}`);
+    gameState.monsterImageMap[playerId] = monsterImageFileName;
+    log.info(`Generated monster image for player ${playerId}: ${monsterImageFileName}`);
 
     if (Object.keys(gameState.monsterImageMap).length === gameState.maxPlayers) {
       setHandler(startMonsterImageGen, undefined);
