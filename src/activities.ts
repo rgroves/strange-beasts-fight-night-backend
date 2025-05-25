@@ -11,18 +11,18 @@ import { GAME_ASSETS_DIR } from './nd-shared';
 
 config();
 
-interface generateMonsterImageInput {
+interface GenerateMonsterImageInput {
   doodleFileName: string;
   prompt: string;
   style: string;
 }
 
-interface generateMonsterImageOutput {
+interface GenerateMonsterImageOutput {
   monsterImageFileName: string;
 }
 
 const MONSTER_GEN_STUB = false; // TODO: Remove this stub when the real monster generation is needed
-export async function generateMonsterImage(input: generateMonsterImageInput): Promise<generateMonsterImageOutput> {
+export async function generateMonsterImage(input: GenerateMonsterImageInput): Promise<GenerateMonsterImageOutput> {
   if (MONSTER_GEN_STUB) {
     log.info('Beast generation stub is enabled; returning stub image path.');
     return { monsterImageFileName: 'stub-monster-image.png' };

@@ -28,7 +28,7 @@ export async function runGame(): Promise<string> {
   const gameState: GameState = {
     state: 'LobbyPhase',
     maxPlayers: 2,
-    players: [],
+    playersMap: {},
     monsterImageMap: {},
     monsterConfigMap: {},
     battleAudioFileName: '',
@@ -37,19 +37,20 @@ export async function runGame(): Promise<string> {
   setHandler(addPlayerUpdate, (input: AddPlayerInput): AddPlayerOuptut => {
     const player: Player = { id: input.requestedPlayerId };
 
-    if (gameState.players.some((p) => p.id === player.id)) {
+    // TODO - Do something different here - like unique-ify the player ID
+    if (gameState.playersMap[player.id]) {
       log.warn(`Player ${input.requestedPlayerId} is already in the game.`);
       throw new Error(`Player ${input.requestedPlayerId} is already in the game.`);
     }
 
-    gameState.players.push(player);
+    gameState.playersMap[player.id] = player;
     log.info(`Player ${input.requestedPlayerId} added to the game.`);
 
     return { playerId: input.requestedPlayerId };
   });
 
   setHandler(startMonsterImageGen, async (input: StartMonsterImageGenInput): Promise<void> => {
-    const { playerId, doodleFileName, prompt, style } = input;
+    const { playerId, doodleFileName, monsterDescription, prompt, style } = input;
 
     if (gameState.state !== 'DrawingPhase') {
       log.warn(`Game is not in DrawingPhase; cannot generate monster image.`);
@@ -67,6 +68,7 @@ export async function runGame(): Promise<string> {
       style,
     });
 
+    gameState.playersMap[playerId].monsterDescription = monsterDescription;
     gameState.monsterImageMap[playerId] = monsterImageFileName;
     log.info(`Generated monster image for player ${playerId}: ${monsterImageFileName}`);
 
@@ -104,12 +106,16 @@ export async function runGame(): Promise<string> {
     return gameState;
   });
 
-  await condition(() => gameState.players.length === gameState.maxPlayers);
+  await condition(() => Object.keys(gameState.playersMap).length === gameState.maxPlayers);
   log.info(`All players have joined the game. Starting the game...`);
   setHandler(addPlayerUpdate, undefined);
 
   gameState.state = 'DrawingPhase';
-  log.info(`Game is now in DrawingPhase with players: ${gameState.players.map((p) => p.id).join(', ')}`);
+  log.info(
+    `Game is now in DrawingPhase with players: ${Object.values(gameState.playersMap)
+      .map((p) => p.id)
+      .join(', ')}`,
+  );
 
   await condition(() => gameState.state === 'MonsterConfigPhase');
   log.info(`Game is now in MonsterConfigPhase. Players are configuring their monsters.`);

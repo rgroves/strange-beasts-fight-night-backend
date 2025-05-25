@@ -103,6 +103,7 @@ export default class GameController {
     await handle?.signal(startMonsterImageGen, {
       playerId,
       doodleFileName,
+      monsterDescription,
       prompt,
       style,
     });

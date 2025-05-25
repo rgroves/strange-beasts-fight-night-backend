@@ -62,6 +62,7 @@ export type HealthScore = number;
 
 export interface Player {
   id: PlayerId;
+  monsterDescription?: string;
 }
 
 export interface GameState {
@@ -74,7 +75,7 @@ export interface GameState {
     | 'AudioGenerationPhase'
     | 'GameOver';
   maxPlayers: number;
-  players: Player[];
+  playersMap: Record<PlayerId, Player>;
   monsterImageMap: Record<PlayerId, FilePath>;
   monsterConfigMap: Record<PlayerId, MonsterConfig>;
   battleAudioFileName: FilePath;
@@ -142,6 +143,7 @@ export interface FightDetails {
 export interface StartMonsterImageGenInput {
   playerId: PlayerId;
   doodleFileName: string;
+  monsterDescription: string;
   prompt: string;
   style: string;
 }
