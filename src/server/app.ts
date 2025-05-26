@@ -38,7 +38,9 @@ app.use(
   }),
 );
 
-app.use('/static/game-assets', express.static(path.join(__dirname, 'public', 'game-assets')));
+const staticPath = path.join(__dirname, 'public', 'game-assets');
+dbglogger(`Serving static files from: ${staticPath}`);
+app.use('/static/', express.static(staticPath));
 
 app.use('/api/v1/', apiV1Router);
 
