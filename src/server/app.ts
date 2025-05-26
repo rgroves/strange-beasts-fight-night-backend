@@ -1,3 +1,4 @@
+import { config } from 'dotenv';
 import express from 'express';
 import path from 'path';
 import debug from 'debug';
@@ -5,6 +6,8 @@ import cors from 'cors';
 
 import temporalClient from './temporal-client';
 import apiV1Router from './api-v1-router';
+
+config();
 
 const dbglogger = debug('giant-monster-brawl:server');
 const app = express();
@@ -31,9 +34,10 @@ async function gracefulShutdown() {
   process.exit(0);
 }
 
+console.log(`cors origin: ${process.env.FRONT_END_ORIGIN}`);
 app.use(
   cors({
-    origin: 'http://127.0.0.1:5173',
+    origin: process.env.FRONT_END_ORIGIN,
     credentials: true,
   }),
 );
