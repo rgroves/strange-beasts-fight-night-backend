@@ -1,6 +1,9 @@
+import { config } from 'dotenv';
 import { NativeConnection, Worker } from '@temporalio/worker';
 import * as activities from './activities';
 import { TASK_QUEUE_NAME } from './shared';
+
+config();
 
 async function run() {
   // Step 1: Establish a connection with Temporal server.
@@ -8,7 +11,7 @@ async function run() {
   // Worker code uses `@temporalio/worker.NativeConnection`.
   // (But in your application code it's `@temporalio/client.Connection`.)
   const connection = await NativeConnection.connect({
-    address: 'localhost:7233',
+    address: process.env.TEMPORAL_SERVER_URI,
     // TLS and gRPC metadata configuration goes here.
   });
   try {
