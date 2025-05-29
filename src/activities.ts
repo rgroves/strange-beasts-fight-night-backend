@@ -10,6 +10,7 @@ import { FilePath, GameId, MonsterConfig, PlayerId } from './types';
 import { GAME_ASSETS_DIR } from './nd-shared';
 
 config();
+const commentaryRegExp = RegExp('\\s*<MONSTER_COMMENTARY>(.*)</MONSTER_COMMENTARY>.*$', 's');
 
 interface GenerateMonsterImageInput {
   doodleFileName: string;
@@ -111,7 +112,7 @@ export async function generateBattleCommentary({
   log.info(`Fight details loaded from: ${fightDetailsFilePath}`);
 
   log.info(`The prompt is: ${prompt}`);
-  log.info(`The fight details are: ${JSON.stringify(fightDetails)}`);
+  log.info(`The fight details are: ${fightDetails}`);
   log.info('Calling OpenAI API to generate battle commentary...');
 
   if (BATTLE_COMMENTARY_STUB) {
@@ -141,7 +142,7 @@ export async function generateBattleCommentary({
         content: [
           {
             type: 'input_text',
-            text: JSON.stringify(fightDetails),
+            text: fightDetails,
           },
         ],
       },
@@ -159,14 +160,26 @@ export async function generateBattleCommentary({
     store: false,
   });
 
-  const battleCommentary = response.output_text;
+  const rawBattleCommentary = response.output_text;
   log.info('OpenAI API response received.');
-  log.info(`Response: ${JSON.stringify(response.output_text)}`);
+  log.info(`Response: ${rawBattleCommentary}`);
 
+  const match = commentaryRegExp.exec(rawBattleCommentary);
+  let battleCommentary = match?.[1];
+
+  if (!battleCommentary) {
+    log.warn('No battle commentary found in the response. Using default message.');
+    battleCommentary =
+      "Well, that's embarrassing. It seems our AI friend forgot to comment on the battle. " +
+      'Or maybe the programmer forgot some piece of arcane syntax somewhere. Either way, ' +
+      "let's just pretend it was a thrilling fight... and maybe try again!";
+  }
+
+  log.info(`Battle commentary generated: ${battleCommentary}`);
   const tmpDir = os.tmpdir();
   const fileName = `${gameId}-battle-commentary.txt`;
   const battleCommentaryfilePath = path.join(tmpDir, fileName);
-  await fs.writeFile(battleCommentaryfilePath, battleCommentary);
+  await fs.writeFile(battleCommentaryfilePath, battleCommentary.trim());
 
   return {
     battleCommentaryfilePath,
