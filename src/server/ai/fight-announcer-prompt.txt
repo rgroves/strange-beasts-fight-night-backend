@@ -19,7 +19,7 @@ root object
     defense           number          required, min=1, max=6
     speed             number          required, min=1, max=6
     maxHealth         number          required, min=1, max=6, health at start of battle
-    currentHealth     number          required, min=1, max=6, health at end of battle
+    currentHealth     number          required, min=0, max=6, health at end of battle
     startingVitality  string          required, vitality at start of battle
     currentVitality   string          required, vitality at end of battle
   turns               array<object>   required, length <= 5
