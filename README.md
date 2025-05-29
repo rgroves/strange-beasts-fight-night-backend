@@ -1,23 +1,30 @@
-# Starter project
+# Strange Beasts: Fight Night - Backend
 
-This is an empty project that is scaffolded out when you run `npx @temporalio/create@latest ./myfolder` and choose the `empty` option.
+This repo contains the backend components for running _Strange Beasts: Fight Night_.
 
-- Add your Activity Definitions to `src/activities.ts`.
-- Add your Workflow Definitions to `src/workflows.ts`.
-- Set your task queue name in `src/shared.ts`.
-- Modify the `src/client.ts` file and replace `YOUR_WORKFLOW` with the name of your Workflow.
-- Add Activity and Workflow tests to the `src/mocha` directory in files with the extension `.test.ts`.
+This project was built when I was participating in the [Web Dev Challenge Hackathon S2.E2: Build a game played on at least 2 devices](https://codetv.dev/blog/web-dev-challenge-hackathon-s2e2-multi-device-game-temporal).
 
-## Running the code
+## Components
 
-Install dependencies with `npm install`.
+- Temporal Server
 
-Run `temporal server start-dev` to start [Temporal Server](https://github.com/temporalio/cli/#installation).
+  ```shell
+  npm run temporal:dev
+  ```
 
-The `package.json` file contains scripts for running the client, the Worker, and tests.
+- Temporal Worker
 
-1. In a shell, run `npm run start.watch` to start the Worker and reload it when code changes.
-1. In another shell, run `npm run workflow` to run the Workflow Client.
-1. Run `npm run format` to format your code according to the rules in `.prettierrc`.
-1. Run `npm run lint` to lint your code according to the rules in `eslintrc.js`.
-1. Run `npm test` to run the tests.
+  ```shell
+  npm run worker:dev
+  ```
+
+- BEFE Server  
+  This is the Backend-for-Frontend server that the frontend UI comminucates with.
+
+  ```shell
+  npm run server:dev
+  ```
+
+## Environment Variables
+
+A `.env` file will need to be created at the root of your local repo with the appropriate vars set. See the `.env-example.txt` for details.
