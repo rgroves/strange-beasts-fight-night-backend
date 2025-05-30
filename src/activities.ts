@@ -3,7 +3,6 @@ import crypto from 'crypto';
 import { config } from 'dotenv';
 import fs from 'fs/promises';
 import OpenAI, { toFile } from 'openai';
-import os from 'os';
 import path from 'path';
 import generateMockBattle from './battle-logic';
 import { FilePath, GameId, MonsterConfig, PlayerId } from './types';
@@ -117,7 +116,8 @@ export async function generateBattleCommentary({
 
   if (BATTLE_COMMENTARY_STUB) {
     log.info('Battle commentary generation stub is enabled; returning stub file path.');
-    return { battleCommentaryfilePath: '/tmp/stub-battle-commentary.txt' };
+    const stubFilePath = path.resolve(GAME_ASSETS_DIR, 'stub-battle-commentary.txt');
+    return { battleCommentaryfilePath: stubFilePath };
   }
 
   const openai = new OpenAI({
@@ -176,9 +176,8 @@ export async function generateBattleCommentary({
   }
 
   log.info(`Battle commentary generated: ${battleCommentary}`);
-  const tmpDir = os.tmpdir();
   const fileName = `${gameId}-battle-commentary.txt`;
-  const battleCommentaryfilePath = path.join(tmpDir, fileName);
+  const battleCommentaryfilePath = path.resolve(GAME_ASSETS_DIR, fileName);
   await fs.writeFile(battleCommentaryfilePath, battleCommentary.trim());
 
   return {

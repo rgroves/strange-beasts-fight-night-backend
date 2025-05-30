@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
 
+import { GAME_ASSETS_DIR } from './nd-shared';
 import { Attack, ActionResult, FightDetails, getVitalityIndex, MonsterConfig, Vitality, GameId } from './types';
 
 const LOGGING_ENABLED = false;
@@ -272,9 +273,8 @@ function determineVitality(health: number, maxHealth: number) {
 }
 
 async function saveFightDetails(gameId: GameId, fightDetails: string) {
-  const tmpDir = os.tmpdir();
   const fileName = `${gameId}-fight-details.txt`;
-  const filePath = path.join(tmpDir, fileName);
+  const filePath = path.resolve(GAME_ASSETS_DIR, fileName);
   await fs.writeFile(filePath, fightDetails);
   return filePath;
 }
