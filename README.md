@@ -28,3 +28,7 @@ This project was built when I was participating in the [Web Dev Challenge Hackat
 ## Environment Variables
 
 A `.env` file will need to be created at the root of your local repo with the appropriate vars set. See the `.env-example.txt` for details.
+
+## Playing the Game
+
+To play the game, you'll need to run the frontend which can be found in this repo: https://github.com/rgroves/strange-beasts-fight-night-frontend
